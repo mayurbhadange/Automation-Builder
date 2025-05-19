@@ -38,20 +38,20 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 ## 📸 Screenshots
 
 ### 🏠 Homepage – Hero Section
-![Fuzzie Homepage](./fuzz1.png)
+![Fuzzie Homepage](./public/fuzz1.png)
 
 ### 🧠 Workflow Builder – Drag & Drop Interface
-![Workflow Builder](./fuzz2.png)
+![Workflow Builder](./public/fuzz2.png)
 
 ### 🔗 App Connections – OAuth Linked Services
-![App Connections](./fuzz3.png)
+![App Connections](./public/fuzz3.png)
 
 ### ⚙️ Settings – User Profile Panel
-![Settings Page](./fuzz4.png)
+![Settings Page](./public/fuzz4.png)
 
 ### 💳 Pricing Page – Subscription Plans
-![Pricing Plans](./fuzz5.png)
+![Pricing Plans](./public/fuzz5.png)
 
 ### 📈 Developer Studio – Landing Section
-![Developer Studio](./fuzz6.png)
+![Developer Studio](./public/fuzz6.png)
 
