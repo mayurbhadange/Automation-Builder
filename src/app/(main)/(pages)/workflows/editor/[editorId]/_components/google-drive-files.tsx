@@ -42,20 +42,16 @@ const GoogleDriveFiles = (props: Props) => {
 
   const onListener = async () => {
     const listener = await getGoogleListener()
-    if (listener?.googleResourceId !== null) {
+    if (listener?.googleResourceId !== null && listener?.googleResourceId !== undefined) {
       setIsListening(true)
-    }
-    // if (listener && typeof listener.googleResourceId === 'string' && listener.googleResourceId.length > 0) {
-    //   setIsListening(true)
-    // }
-    else {
-      setIsListening(false) // Add explicit else case
+    } else {
+      setIsListening(false)
     }
   }
 
-  // useEffect(() => {
-  //   onListener()
-  // }, [])
+  useEffect(() => {
+    onListener()
+  }, [])
 
   return (
     <div className="flex flex-col gap-3 pb-6">
