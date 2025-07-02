@@ -72,6 +72,21 @@ export async function POST(req: NextRequest) {
                         }
 
                         if (flowPath[current] == 'Slack') {
+                            console.log(`🔵 Processing Slack action for workflow ${flow.id}`)
+                            console.log(`📝 Slack template: ${flow.slackTemplate}`)
+                            console.log(`📢 Slack channels: ${JSON.stringify(flow.slackChannels)}`)
+                            console.log(`🔑 Has access token: ${!!flow.slackAccessToken}`)
+                            
+                            if (!flow.slackTemplate) {
+                                console.log(`❌ No Slack template found - click "Save Template" first`)
+                                return
+                            }
+                            
+                            if (!flow.slackChannels || flow.slackChannels.length === 0) {
+                                console.log(`❌ No Slack channels found - select channel and click "Save Template"`)
+                                return
+                            }
+                            
                             const channels = flow.slackChannels.map((channel) => {
                                 return {
                                     label: '',
@@ -83,6 +98,7 @@ export async function POST(req: NextRequest) {
                                 channels,
                                 flow.slackTemplate!
                             )
+                            console.log(`✅ Slack message sent successfully`)
                             flowPath.splice(flowPath[current], 1)
                         }
 
