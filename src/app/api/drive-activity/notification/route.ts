@@ -32,7 +32,25 @@ export async function POST(req: NextRequest) {
             })
             if (workflow) {
                 workflow.map(async (flow) => {
-                    const flowPath = JSON.parse(flow.flowPath!)
+                    // Add safety checks for flowPath
+                    if (!flow.flowPath) {
+                        console.log(`⚠️ Workflow ${flow.id} has no flowPath defined`)
+                        return
+                    }
+                    
+                    let flowPath
+                    try {
+                        flowPath = JSON.parse(flow.flowPath)
+                    } catch (error) {
+                        console.log(`❌ Invalid JSON in flowPath for workflow ${flow.id}:`, error)
+                        return
+                    }
+                    
+                    if (!flowPath || !Array.isArray(flowPath)) {
+                        console.log(`⚠️ Workflow ${flow.id} has invalid flowPath:`, flowPath)
+                        return
+                    }
+                    
                     let current = 0
                     while (current < flowPath.length) {
                         if (flowPath[current] == 'Discord') {
@@ -119,14 +137,17 @@ export async function POST(req: NextRequest) {
                         }
                         current++
                     }
-                    await db.user.update({
-                        where: {
-                            clerkId: user.clerkId,
-                        },
-                        data: {
-                            credits: `${parseInt(user.credits!) - 1}`,
-                        },
-                    })
+                    // Only update credits if not unlimited
+                    if (user.credits !== 'Unlimited') {
+                        await db.user.update({
+                            where: {
+                                clerkId: user.clerkId,
+                            },
+                            data: {
+                                credits: `${parseInt(user.credits!) - 1}`,
+                            },
+                        })
+                    }
                 })
                 return Response.json(
                     {
