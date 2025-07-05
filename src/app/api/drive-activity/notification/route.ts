@@ -196,6 +196,12 @@ export async function POST(req: NextRequest) {
                     }
                 )
             }
+        } else {
+            console.log(`❌ User has insufficient credits (${user.credits}). Workflow execution blocked.`)
+            return Response.json({ 
+                message: 'Insufficient credits to execute workflow',
+                userCredits: user.credits 
+            }, { status: 402 })
         }
     }
     return Response.json(
