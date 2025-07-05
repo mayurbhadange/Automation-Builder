@@ -17,6 +17,8 @@ export async function POST(req: NextRequest) {
     })
 
     //WIP:CREDITS
+    console.log(`🔄 Channel Resource ID: ${channelResourceId}`)
+    
     if (channelResourceId) {
         const user = await db.user.findFirst({
             where: {
@@ -24,15 +26,42 @@ export async function POST(req: NextRequest) {
             },
             select: { clerkId: true, credits: true },
         })
+        
+        console.log(`🔄 User found: ${user ? user.clerkId : 'None'}`)
+        
+        if (!user) {
+            console.log(`❌ No user found for googleResourceId: ${channelResourceId}`)
+            return Response.json({ message: 'User not found' }, { status: 404 })
+        }
+        
+        console.log(`🔄 User credits: ${user.credits}`)
+        
         if ((user && parseInt(user.credits!) > 0) || user?.credits == 'Unlimited') {
+            console.log(`✅ User has sufficient credits, proceeding with workflow execution`)
             const workflow = await db.workflows.findMany({
                 where: {
                     userId: user.clerkId,
+                    publish: true, // Only execute published workflows
                 }
             })
-            if (workflow) {
+            if (workflow && workflow.length > 0) {
+                console.log(`🔄 Found ${workflow.length} published workflows to execute`)
                 workflow.map(async (flow) => {
+                    console.log(`🔄 Processing workflow: ${flow.name}`)
+                    
+                    if (!flow.flowPath) {
+                        console.log(`❌ Workflow ${flow.name} has no flowPath`)
+                        return
+                    }
+                    
                     const flowPath = JSON.parse(flow.flowPath!)
+                    console.log(`🔄 FlowPath: ${JSON.stringify(flowPath)}`)
+                    
+                    if (flowPath.length === 0) {
+                        console.log(`❌ Workflow ${flow.name} has empty flowPath`)
+                        return
+                    }
+                    
                     let current = 0
                     while (current < flowPath.length) {
                         if (flowPath[current] == 'Discord') {
@@ -54,17 +83,47 @@ export async function POST(req: NextRequest) {
                         }
 
                         if (flowPath[current] == 'Slack') {
+                            console.log(`🔄 Executing Slack action for workflow: ${flow.name}`)
+                            
+                            if (!flow.slackChannels || flow.slackChannels.length === 0) {
+                                console.log(`❌ No Slack channels configured for workflow: ${flow.name}`)
+                                current++
+                                continue
+                            }
+                            
+                            if (!flow.slackAccessToken) {
+                                console.log(`❌ No Slack access token for workflow: ${flow.name}`)
+                                current++
+                                continue
+                            }
+                            
+                            if (!flow.slackTemplate) {
+                                console.log(`❌ No Slack template for workflow: ${flow.name}`)
+                                current++
+                                continue
+                            }
+                            
                             const channels = flow.slackChannels.map((channel) => {
                                 return {
                                     label: '',
                                     value: channel,
                                 }
                             })
-                            await postMessageToSlack(
-                                flow.slackAccessToken!,
-                                channels,
-                                flow.slackTemplate!
-                            )
+                            
+                            console.log(`🔄 Sending to Slack channels: ${JSON.stringify(channels)}`)
+                            console.log(`🔄 Message template: ${flow.slackTemplate}`)
+                            
+                            try {
+                                await postMessageToSlack(
+                                    flow.slackAccessToken!,
+                                    channels,
+                                    flow.slackTemplate!
+                                )
+                                console.log(`✅ Slack message sent successfully`)
+                            } catch (error) {
+                                console.log(`❌ Error sending Slack message: ${error}`)
+                            }
+                            
                             flowPath.splice(flowPath[current], 1)
                         }
 
