@@ -36,8 +36,10 @@ export async function POST(req: NextRequest) {
         
         console.log(`🔄 User credits: ${user.credits}`)
         
-        if ((user && parseInt(user.credits!) > 0) || user?.credits == 'Unlimited') {
-            console.log(`✅ User has sufficient credits, proceeding with workflow execution`)
+        // TEMPORARY: Bypass credits check for development
+        // TODO: Remove this bypass and fix credits properly
+        if (true || (user && parseInt(user.credits!) > 0) || user?.credits == 'Unlimited') {
+            console.log(`✅ User has sufficient credits (bypassed for development), proceeding with workflow execution`)
             const workflow = await db.workflows.findMany({
                 where: {
                     userId: user.clerkId,
@@ -178,6 +180,9 @@ export async function POST(req: NextRequest) {
                         }
                         current++
                     }
+                    // TEMPORARY: Disable credit deduction for development
+                    // TODO: Re-enable when credits are properly managed
+                    /*
                     await db.user.update({
                         where: {
                             clerkId: user.clerkId,
@@ -186,6 +191,7 @@ export async function POST(req: NextRequest) {
                             credits: `${parseInt(user.credits!) - 1}`,
                         },
                     })
+                    */
                 })
                 return Response.json(
                     {
