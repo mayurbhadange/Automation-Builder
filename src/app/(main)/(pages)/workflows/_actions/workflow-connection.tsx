@@ -22,6 +22,23 @@ export const getGoogleListener = async () => {
   }
 }
 
+export const clearGoogleListener = async () => {
+  const { userId } = auth()
+  
+  if (userId) {
+    const cleared = await db.user.update({
+      where: {
+        clerkId: userId,
+      },
+      data: {
+        googleResourceId: null,
+      },
+    })
+    
+    if (cleared) return { message: 'Google listener cleared' }
+  }
+}
+
 export const onFlowPublish = async (workflowId: string, state: boolean) => {
   console.log(state)
   const published = await db.workflows.update({

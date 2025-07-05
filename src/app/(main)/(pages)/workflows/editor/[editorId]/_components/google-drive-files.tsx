@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import axios from 'axios'
-import { getGoogleListener } from '../../../_actions/workflow-connection'
+import { getGoogleListener, clearGoogleListener } from '../../../_actions/workflow-connection'
 import { Card, CardDescription } from '@/components/ui/card'
 import { CardContainer } from '@/components/global/3d-card'
 import { Button } from '@/components/ui/button'
@@ -44,28 +44,46 @@ const GoogleDriveFiles = (props: Props) => {
     const listener = await getGoogleListener()
     if (listener?.googleResourceId !== null) {
       setIsListening(true)
-    }
-    // if (listener && typeof listener.googleResourceId === 'string' && listener.googleResourceId.length > 0) {
-    //   setIsListening(true)
-    // }
-    else {
-      setIsListening(false) // Add explicit else case
+    } else {
+      setIsListening(false)
     }
   }
 
-  // useEffect(() => {
-  //   onListener()
-  // }, [])
+  const refreshListener = async () => {
+    try {
+      setLoading(true)
+      await clearGoogleListener()
+      setIsListening(false)
+      toast.success('Listener cleared. You can now create a new one.')
+    } catch (error: any) {
+      toast.error('Failed to clear listener')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    onListener()
+  }, [])
 
   return (
     <div className="flex flex-col gap-3 pb-6">
       {isListening ? (
-
-        <Card className="py-3">
-          <CardContainer>
-            <CardDescription>Listening...</CardDescription>
-          </CardContainer>
-        </Card>
+        <div className="flex flex-col gap-2">
+          <Card className="py-3">
+            <CardContainer>
+              <CardDescription>Listening...</CardDescription>
+            </CardContainer>
+          </Card>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshListener}
+            disabled={loading}
+          >
+            {loading ? 'Refreshing...' : 'Refresh Listener'}
+          </Button>
+        </div>
       ) : (
         <Button
           variant="outline"
