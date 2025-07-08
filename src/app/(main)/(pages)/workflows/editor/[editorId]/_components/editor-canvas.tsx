@@ -22,7 +22,7 @@ import { v4 } from 'uuid'
 import { EditorCanvasDefaultCardTypes } from '@/lib/constants'
 import FlowInstance from './flow-instance'
 import EditorCanvasSidebar from './editor-canvas-sidebar'
-import { onGetNodesEdges } from '../../../_actions/workflow-connection'
+import { onGetNodesEdges } from '../../../_actions/workflow-connections'
 
 type Props = {}
 
