@@ -1,55 +1,80 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
-const stats = [
-  { label: 'Users', value: '1,234' },
-  { label: 'Revenue', value: '$12,345' },
-  { label: 'Activity', value: '87%' },
-]
+const integrationsCount = 5 // Static for now
 
-const recentActivity = [
-  'User John Doe signed up',
-  'Payment received from Jane Smith',
-  'Server backup completed',
-  'New comment on post #42',
+type Stat = { label: string; value: string | number }
+type Activity = { time: string; action: string }
+
+const recentActivities: Activity[] = [
+  { time: '2 min ago', action: 'Workflow "Daily Report" executed' },
+  { time: '10 min ago', action: 'Slack integration connected' },
+  { time: '1 hr ago', action: 'Upgraded to Pro Plan' },
+  { time: 'Yesterday', action: 'Workflow "Send Invoice" created' },
 ]
 
 const DashboardPage = () => {
+  const [stats, setStats] = useState<Stat[]>([
+    { label: 'Active Workflows', value: '-' },
+    { label: 'Credits Left', value: '-' },
+    { label: 'Integrations', value: integrationsCount },
+    { label: 'Plan', value: '-' },
+  ])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/dashboard')
+        if (res.ok) {
+          const data = await res.json()
+          setStats([
+            { label: 'Active Workflows', value: data.activeWorkflows },
+            { label: 'Credits Left', value: data.creditsLeft },
+            { label: 'Integrations', value: integrationsCount },
+            { label: 'Plan', value: data.plan },
+          ])
+        }
+      } catch (e) {
+        // handle error
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
   return (
-    <div className="flex flex-col gap-8 relative p-6">
-      <h1 className="text-4xl sticky top-0 z-[10] bg-background/50 backdrop-blur-lg flex items-center border-b pb-4 mb-6">
+    <div className="flex flex-col gap-6 p-8 bg-gradient-to-br from-[#18181b] via-[#23232a] to-[#1e1e24] min-h-screen">
+      <h1 className="text-4xl font-bold sticky top-0 z-[10] p-6 bg-background/60 backdrop-blur-lg flex items-center border-b border-neutral-800 shadow-lg">
         Dashboard
       </h1>
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {stats.map((stat) => (
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+        {stats.map((stat: Stat) => (
           <div
             key={stat.label}
-            className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center border"
+            className="rounded-xl bg-neutral-900/80 p-6 flex flex-col items-center shadow-md border border-neutral-800 hover:scale-[1.03] transition-transform"
           >
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <div className="text-gray-500 mt-2">{stat.label}</div>
+            <span className="text-3xl font-semibold text-blue-400">{loading ? '...' : stat.value}</span>
+            <span className="text-neutral-300 mt-2">{stat.label}</span>
           </div>
         ))}
       </div>
-      {/* Main Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 border">
-          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-          <ul className="space-y-2">
-            {recentActivity.map((item, idx) => (
-              <li key={idx} className="text-gray-700 dark:text-gray-300">
-                • {item}
+
+      {/* Recent Activity */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold mb-4 text-neutral-200">Recent Activity</h2>
+        <div className="bg-neutral-900/80 rounded-xl p-6 border border-neutral-800 shadow">
+          <ul className="divide-y divide-neutral-800">
+            {recentActivities.map((activity: Activity, idx: number) => (
+              <li key={idx} className="py-3 flex items-center justify-between">
+                <span className="text-neutral-300">{activity.action}</span>
+                <span className="text-xs text-neutral-500">{activity.time}</span>
               </li>
             ))}
           </ul>
-        </div>
-        {/* Chart Placeholder */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 flex flex-col items-center justify-center border min-h-[200px]">
-          <h2 className="text-xl font-semibold mb-4">Analytics</h2>
-          <div className="w-full h-32 bg-gray-200 dark:bg-gray-800 rounded flex items-center justify-center text-gray-400">
-            [Chart Placeholder]
-          </div>
         </div>
       </div>
     </div>
