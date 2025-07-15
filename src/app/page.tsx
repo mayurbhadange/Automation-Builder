@@ -74,7 +74,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
-                    100 tasks per month
+                    10 credits per month
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
@@ -113,15 +113,14 @@ export default function Home() {
                 translateZ="60"
                 className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300"
               >
-                Get a glimpse of what our software is capable of. Just a heads
-                up {"you'll"} never leave us after this!
+                Experience a monthly surge of credits to supercharge your automation efforts. Ideal for small to medium-sized projects seeking consistent support.
                 <ul className="my-4 flex flex-col gap-2">
                   <li className="flex items-center gap-2">
                     <CheckIcon />3 Free automations
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
-                    100 tasks per month
+                    100 credits per month
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
@@ -160,15 +159,14 @@ export default function Home() {
                 translateZ="60"
                 className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300"
               >
-                Get a glimpse of what our software is capable of. Just a heads
-                up {"you'll"} never leave us after this!
+                Enjoy a monthly torrent of credits flooding your account, empowering you to tackle even the most ambitious automation tasks effortlessly.
                 <ul className="my-4 flex flex-col gap-2">
                   <li className="flex items-center gap-2">
-                    <CheckIcon />3 Free automations
+                    <CheckIcon />Unlimited automations
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
-                    100 tasks per month
+                    Unlimited tasks per month
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
