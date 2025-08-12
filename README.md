@@ -80,7 +80,7 @@ STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
 # Google API (Drive)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
+GOOGLE_REDIRECT_URI=https://fuzzie.vercel.app/api/auth/callback/google
 GOOGLE_API_KEY=your-google-api-key
 
 # Slack API
@@ -99,7 +99,7 @@ DISCORD_PUBLIC_KEY=your-discord-public-key
 NOTION_API_KEY=your-notion-api-key
 NOTION_CLIENT_ID=your-notion-client-id
 NOTION_CLIENT_SECRET=your-notion-client-secret
-NOTION_REDIRECT_URI=http://localhost:3000/api/auth/callback/notion
+NOTION_REDIRECT_URI=https://fuzzie.vercel.app/api/auth/callback/notion
 
 
 First, run the development server:
@@ -114,7 +114,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result (for local development).
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
