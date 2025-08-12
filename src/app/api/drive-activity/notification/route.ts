@@ -316,7 +316,7 @@ export async function POST(req: NextRequest) {
                                 'https://api.cron-job.org/jobs',
                                 {
                                     job: {
-                                        url: `https://fuzzie.vercel.app/api/drive-activity/notification?flow_id=${flow.id}`,
+                                        url: `https://fuzzie-kohl.vercel/api/drive-activity/notification?flow_id=${flow.id}`,
                                         enabled: 'true',
                                         schedule: {
                                             timezone: 'Europe/Istanbul',

@@ -52,7 +52,7 @@ export async function GET() {
       id: channelId,
       type: 'web_hook',
       address:
-        `https://fuzzie.vercel.app/api/drive-activity/notification`,
+        `https://fuzzie-kohl.vercel/api/drive-activity/notification`,
       kind: 'api#channel',
     },
   })

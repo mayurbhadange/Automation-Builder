@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
     ],
     mode: 'subscription',
     success_url:
-                  'https://fuzzie.vercel.app/billing?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url: 'https://fuzzie.vercel.app/billing',
+                  'https://fuzzie-kohl.vercel/billing?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: 'https://fuzzie-kohl.vercel/billing',
   })
   return NextResponse.json(session.url)
 }
