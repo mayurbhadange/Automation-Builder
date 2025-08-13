@@ -181,7 +181,7 @@ import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-    console.log('🔴 Changed')
+    console.log('🔵 Webhook received: Google Drive Activity Notification');
     const headersList = headers()
     let channelResourceId
     headersList.forEach((value, key) => {
@@ -190,8 +190,8 @@ export async function POST(req: NextRequest) {
         }
     })
 
+    console.log(`🔄 Channel Resource ID: ${channelResourceId}`);
     //WIP:CREDITS
-    console.log(`🔄 Channel Resource ID: ${channelResourceId}`)
     
     if (channelResourceId) {
         const user = await db.user.findFirst({
