@@ -172,6 +172,218 @@
 
 //cursor's  code
 
+// import { postContentToWebHook } from "@/app/(main)/(pages)/connections/_actions/discord-connection";
+// import { onCreateNewPageInDatabase } from "@/app/(main)/(pages)/connections/_actions/notion-connection";
+// import { postMessageToSlack } from "@/app/(main)/(pages)/connections/_actions/slack-connection";
+// import { db } from "@/lib/db";
+// import axios from "axios";
+// import { headers } from "next/headers";
+// import { NextRequest } from "next/server";
+
+// export async function POST(req: NextRequest) {
+//     console.log('🔵 Webhook received: Google Drive Activity Notification');
+//     const headersList = headers()
+//     let channelResourceId
+//     headersList.forEach((value, key) => {
+//         if (key == 'x-goog-resource-id') {
+//             channelResourceId = value
+//         }
+//     })
+
+//     console.log(`🔄 Channel Resource ID: ${channelResourceId}`);
+//     //WIP:CREDITS
+
+//     if (channelResourceId) {
+//         const user = await db.user.findFirst({
+//             where: {
+//                 googleResourceId: channelResourceId,
+//             },
+//             select: { clerkId: true, credits: true },
+//         })
+
+//         console.log(`🔄 User found: ${user ? user.clerkId : 'None'}`)
+
+//         if (!user) {
+//             console.log(`❌ No user found for googleResourceId: ${channelResourceId}`)
+//             return Response.json({ message: 'User not found' }, { status: 404 })
+//         }
+
+//         console.log(`🔄 User credits: ${user.credits}`)
+
+//         if ((user && parseInt(user.credits!) > 0) || user?.credits == 'Unlimited') {
+//             console.log(`✅ User has sufficient credits, proceeding with workflow execution`)
+//             const workflow = await db.workflows.findMany({
+//                 where: {
+//                     userId: user.clerkId,
+//                     publish: true, // Only execute published workflows
+//                 }
+//             })
+//             if (workflow && workflow.length > 0) {
+//                 console.log(`🔄 Found ${workflow.length} published workflows to execute`)
+//                 workflow.map(async (flow) => {
+//                     console.log(`🔄 Processing workflow: ${flow.name}`)
+
+//                     if (!flow.flowPath) {
+//                         console.log(`❌ Workflow ${flow.name} has no flowPath`)
+//                         return
+//                     }
+
+//                     const flowPath = JSON.parse(flow.flowPath!)
+//                     console.log(`🔄 FlowPath: ${JSON.stringify(flowPath)}`)
+
+//                     if (flowPath.length === 0) {
+//                         console.log(`❌ Workflow ${flow.name} has empty flowPath`)
+//                         return
+//                     }
+
+//                     let current = 0
+//                     while (current < flowPath.length) {
+//                         if (flowPath[current] == 'Discord') {
+//                             const discordMessage = await db.discordWebhook.findFirst({
+//                                 where: {
+//                                     userId: flow.userId,
+//                                 },
+//                                 select: {
+//                                     url: true,
+//                                 },
+//                             })
+//                             if (discordMessage) {
+//                                 await postContentToWebHook(
+//                                     flow.discordTemplate!,
+//                                     discordMessage.url
+//                                 )
+//                                 flowPath.splice(flowPath[current], 1)
+//                             }
+//                         }
+
+//                         if (flowPath[current] == 'Slack') {
+//                             console.log(`🔄 Executing Slack action for workflow: ${flow.name}`)
+
+//                             if (!flow.slackChannels || flow.slackChannels.length === 0) {
+//                                 console.log(`❌ No Slack channels configured for workflow: ${flow.name}`)
+//                                 current++
+//                                 continue
+//                             }
+
+//                             if (!flow.slackAccessToken) {
+//                                 console.log(`❌ No Slack access token for workflow: ${flow.name}`)
+//                                 current++
+//                                 continue
+//                             }
+
+//                             if (!flow.slackTemplate) {
+//                                 console.log(`❌ No Slack template for workflow: ${flow.name}`)
+//                                 current++
+//                                 continue
+//                             }
+
+//                             const channels = flow.slackChannels.map((channel) => {
+//                                 return {
+//                                     label: '',
+//                                     value: channel,
+//                                 }
+//                             })
+
+//                             console.log(`🔄 Sending to Slack channels: ${JSON.stringify(channels)}`)
+//                             console.log(`🔄 Message template: ${flow.slackTemplate}`)
+
+//                             try {
+//                                 await postMessageToSlack(
+//                                     flow.slackAccessToken!,
+//                                     channels,
+//                                     flow.slackTemplate!
+//                                 )
+//                                 console.log(`✅ Slack message sent successfully`)
+//                             } catch (error) {
+//                                 console.log(`❌ Error sending Slack message: ${error}`)
+//                             }
+
+//                             flowPath.splice(flowPath[current], 1)
+//                         }
+
+//                         if (flowPath[current] == 'Notion') {
+//                             await onCreateNewPageInDatabase(
+//                                 flow.notionDbId!,
+//                                 flow.notionAccessToken!,
+//                                 JSON.parse(flow.notionTemplate!)
+//                             )
+//                             flowPath.splice(flowPath[current], 1)
+//                         }
+
+
+//                         if (flowPath[current] == 'Wait') {
+//                             const res = await axios.put(
+//                                 'https://api.cron-job.org/jobs',
+//                                 {
+//                                     job: {
+//                                         url: `https://fuzzie-kohl.vercel/api/drive-activity/notification?flow_id=${flow.id}`,
+//                                         enabled: 'true',
+//                                         schedule: {
+//                                             timezone: 'Europe/Istanbul',
+//                                             expiresAt: 0,
+//                                             hours: [-1],
+//                                             mdays: [-1],
+//                                             minutes: ['*****'],
+//                                             months: [-1],
+//                                             wdays: [-1],
+//                                         },
+//                                     },
+//                                 },
+//                                 {
+//                                     headers: {
+//                                         Authorization: `Bearer ${process.env.CRON_JOB_KEY!}`,
+//                                         'Content-Type': 'application/json',
+//                                     },
+//                                 }
+//                             )
+//                             if (res) {
+//                                 flowPath.splice(flowPath[current], 1)
+//                                 const cronPath = await db.workflows.update({
+//                                     where: {
+//                                         id: flow.id,
+//                                     },
+//                                     data: {
+//                                         cronPath: JSON.stringify(flowPath),
+//                                     },
+//                                 })
+//                                 if (cronPath) break
+//                             }
+//                             break
+//                         }
+//                         current++
+//                     }
+//                     await db.user.update({
+//                         where: {
+//                             clerkId: user.clerkId,
+//                         },
+//                         data: {
+//                             credits: `${parseInt(user.credits!) - 1}`,
+//                         },
+//                     })
+//                 })
+//                 return Response.json(
+//                     {
+//                         message: 'flow completed',
+//                     },
+//                     {
+//                         status: 200,
+//                     }
+//                 )
+//             }
+//         }
+//     }
+//     return Response.json(
+//         {
+//             message: 'success',
+//         },
+//         {
+//             status: 200,
+//         }
+//     )
+// }
+
+// gemini's code
+
 import { postContentToWebHook } from "@/app/(main)/(pages)/connections/_actions/discord-connection";
 import { onCreateNewPageInDatabase } from "@/app/(main)/(pages)/connections/_actions/notion-connection";
 import { postMessageToSlack } from "@/app/(main)/(pages)/connections/_actions/slack-connection";
@@ -192,7 +404,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`🔄 Channel Resource ID: ${channelResourceId}`);
     //WIP:CREDITS
-    
+
     if (channelResourceId) {
         const user = await db.user.findFirst({
             where: {
@@ -200,16 +412,16 @@ export async function POST(req: NextRequest) {
             },
             select: { clerkId: true, credits: true },
         })
-        
+
         console.log(`🔄 User found: ${user ? user.clerkId : 'None'}`)
-        
+
         if (!user) {
             console.log(`❌ No user found for googleResourceId: ${channelResourceId}`)
             return Response.json({ message: 'User not found' }, { status: 404 })
         }
-        
+
         console.log(`🔄 User credits: ${user.credits}`)
-        
+
         if ((user && parseInt(user.credits!) > 0) || user?.credits == 'Unlimited') {
             console.log(`✅ User has sufficient credits, proceeding with workflow execution`)
             const workflow = await db.workflows.findMany({
@@ -220,22 +432,23 @@ export async function POST(req: NextRequest) {
             })
             if (workflow && workflow.length > 0) {
                 console.log(`🔄 Found ${workflow.length} published workflows to execute`)
-                workflow.map(async (flow) => {
+
+                for (const flow of workflow) {
                     console.log(`🔄 Processing workflow: ${flow.name}`)
-                    
+
                     if (!flow.flowPath) {
                         console.log(`❌ Workflow ${flow.name} has no flowPath`)
-                        return
+                        continue // Use continue to move to the next workflow
                     }
-                    
+
                     const flowPath = JSON.parse(flow.flowPath!)
                     console.log(`🔄 FlowPath: ${JSON.stringify(flowPath)}`)
-                    
+
                     if (flowPath.length === 0) {
                         console.log(`❌ Workflow ${flow.name} has empty flowPath`)
-                        return
+                        continue
                     }
-                    
+
                     let current = 0
                     while (current < flowPath.length) {
                         if (flowPath[current] == 'Discord') {
@@ -252,41 +465,41 @@ export async function POST(req: NextRequest) {
                                     flow.discordTemplate!,
                                     discordMessage.url
                                 )
-                                flowPath.splice(flowPath[current], 1)
+                                flowPath.splice(current, 1)
                             }
                         }
 
                         if (flowPath[current] == 'Slack') {
                             console.log(`🔄 Executing Slack action for workflow: ${flow.name}`)
-                            
+
                             if (!flow.slackChannels || flow.slackChannels.length === 0) {
                                 console.log(`❌ No Slack channels configured for workflow: ${flow.name}`)
                                 current++
                                 continue
                             }
-                            
+
                             if (!flow.slackAccessToken) {
                                 console.log(`❌ No Slack access token for workflow: ${flow.name}`)
                                 current++
                                 continue
                             }
-                            
+
                             if (!flow.slackTemplate) {
                                 console.log(`❌ No Slack template for workflow: ${flow.name}`)
                                 current++
                                 continue
                             }
-                            
+
                             const channels = flow.slackChannels.map((channel) => {
                                 return {
                                     label: '',
                                     value: channel,
                                 }
                             })
-                            
+
                             console.log(`🔄 Sending to Slack channels: ${JSON.stringify(channels)}`)
                             console.log(`🔄 Message template: ${flow.slackTemplate}`)
-                            
+
                             try {
                                 await postMessageToSlack(
                                     flow.slackAccessToken!,
@@ -297,8 +510,9 @@ export async function POST(req: NextRequest) {
                             } catch (error) {
                                 console.log(`❌ Error sending Slack message: ${error}`)
                             }
-                            
-                            flowPath.splice(flowPath[current], 1)
+
+                            // Fixed: The splice operation was incorrect, using current index is needed
+                            flowPath.splice(current, 1)
                         }
 
                         if (flowPath[current] == 'Notion') {
@@ -307,16 +521,16 @@ export async function POST(req: NextRequest) {
                                 flow.notionAccessToken!,
                                 JSON.parse(flow.notionTemplate!)
                             )
-                            flowPath.splice(flowPath[current], 1)
+                            // Fixed: The splice operation was incorrect, using current index is needed
+                            flowPath.splice(current, 1)
                         }
 
-                         
                         if (flowPath[current] == 'Wait') {
                             const res = await axios.put(
                                 'https://api.cron-job.org/jobs',
                                 {
                                     job: {
-                                        url: `https://fuzzie-kohl.vercel/api/drive-activity/notification?flow_id=${flow.id}`,
+                                        url: `https://fuzzie-kohl.vercel.app/api/drive-activity/notification?flow_id=${flow.id}`,
                                         enabled: 'true',
                                         schedule: {
                                             timezone: 'Europe/Istanbul',
@@ -337,7 +551,7 @@ export async function POST(req: NextRequest) {
                                 }
                             )
                             if (res) {
-                                flowPath.splice(flowPath[current], 1)
+                                flowPath.splice(current, 1)
                                 const cronPath = await db.workflows.update({
                                     where: {
                                         id: flow.id,
@@ -352,15 +566,18 @@ export async function POST(req: NextRequest) {
                         }
                         current++
                     }
-                    await db.user.update({
-                        where: {
-                            clerkId: user.clerkId,
-                        },
-                        data: {
-                            credits: `${parseInt(user.credits!) - 1}`,
-                        },
-                    })
+                }
+
+                // Now that the loop is complete, we can update the user's credits
+                await db.user.update({
+                    where: {
+                        clerkId: user.clerkId,
+                    },
+                    data: {
+                        credits: `${parseInt(user.credits!) - 1}`,
+                    },
                 })
+
                 return Response.json(
                     {
                         message: 'flow completed',
@@ -370,15 +587,15 @@ export async function POST(req: NextRequest) {
                     }
                 )
             }
+
         }
     }
-    return Response.json(
-        {
-            message: 'success',
-        },
-        {
-            status: 200,
-        }
-    )
-}
-
+        return Response.json(
+            {
+                message: 'success',
+            },
+            {
+                status: 200,
+            }
+        )
+    }
