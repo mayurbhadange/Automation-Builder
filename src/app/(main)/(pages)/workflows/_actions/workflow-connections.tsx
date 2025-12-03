@@ -24,7 +24,7 @@ export const getGoogleListener = async () => {
 
 export const clearGoogleListener = async () => {
   const { userId } = auth()
-  
+
   if (userId) {
     const cleared = await db.user.update({
       where: {
@@ -34,7 +34,7 @@ export const clearGoogleListener = async () => {
         googleResourceId: null,
       },
     })
-    
+
     if (cleared) return { message: 'Google listener cleared' }
   }
 }
@@ -77,6 +77,7 @@ export const onCreateNodeTemplate = async (
     }
   }
   if (type === 'Slack') {
+    const channelList = channels?.map((channel) => channel.value) || []
     const response = await db.workflows.update({
       where: {
         id: workflowId,
@@ -84,56 +85,11 @@ export const onCreateNodeTemplate = async (
       data: {
         slackTemplate: content,
         slackAccessToken: accessToken,
+        slackChannels: channelList,
       },
     })
 
     if (response) {
-      const channelList = await db.workflows.findUnique({
-        where: {
-          id: workflowId,
-        },
-        select: {
-          slackChannels: true,
-        },
-      })
-
-      if (channelList) {
-        //remove duplicates before insert
-        const NonDuplicated = channelList.slackChannels.filter(
-          (channel) => channel !== channels![0].value
-        )
-
-        NonDuplicated!
-          .map((channel) => channel)
-          .forEach(async (channel) => {
-            await db.workflows.update({
-              where: {
-                id: workflowId,
-              },
-              data: {
-                slackChannels: {
-                  push: channel,
-                },
-              },
-            })
-          })
-
-        return 'Slack template saved'
-      }
-      channels!
-        .map((channel) => channel.value)
-        .forEach(async (channel) => {
-          await db.workflows.update({
-            where: {
-              id: workflowId,
-            },
-            data: {
-              slackChannels: {
-                push: channel,
-              },
-            },
-          })
-        })
       return 'Slack template saved'
     }
   }

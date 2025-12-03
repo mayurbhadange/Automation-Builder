@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { currentUser } from '@clerk/nextjs'
 import axios from 'axios'
+import { ensureUserExists } from '@/lib/sync-user'
 
 export const onDiscordConnect = async (
   channel_id: string,
@@ -15,10 +16,12 @@ export const onDiscordConnect = async (
 ) => {
   //check if webhook id params set
   if (webhook_id) {
+    await ensureUserExists()
     //check if webhook exists in database with userid
     const webhook = await db.discordWebhook.findFirst({
       where: {
         userId: id,
+        webhookId: webhook_id, // Also check webhookId to be specific
       },
       include: {
         connections: {
@@ -53,10 +56,11 @@ export const onDiscordConnect = async (
 
     //if webhook exists return check for duplicate
     if (webhook) {
-      //check if webhook exists for target channel id
-      const webhook_channel = await db.discordWebhook.findUnique({
+      //check if webhook exists for target channel id AND user
+      const webhook_channel = await db.discordWebhook.findFirst({
         where: {
           channelId: channel_id,
+          userId: id,
         },
         include: {
           connections: {

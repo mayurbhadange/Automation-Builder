@@ -4,6 +4,7 @@ import { Option } from '@/components/ui/multiple-selector'
 import { db } from '@/lib/db'
 import { currentUser } from '@clerk/nextjs'
 import axios from 'axios'
+import { ensureUserExists } from '@/lib/sync-user'
 
 export const onSlackConnect = async (
   app_id: string,
@@ -17,8 +18,13 @@ export const onSlackConnect = async (
 ): Promise<void> => {
   if (!slack_access_token) return
 
+  await ensureUserExists()
+
   const slackConnection = await db.slack.findFirst({
-    where: { slackAccessToken: slack_access_token },
+    where: {
+      slackAccessToken: slack_access_token,
+      userId: user_id, // Scoped to current user
+    },
     include: { connections: true },
   })
 

@@ -3,6 +3,7 @@
 import { db } from '@/lib/db'
 import { currentUser } from '@clerk/nextjs'
 import { Client } from '@notionhq/client'
+import { ensureUserExists } from '@/lib/sync-user'
 
 export const onNotionConnect = async (
   access_token: string,
@@ -14,10 +15,14 @@ export const onNotionConnect = async (
 ) => {
   'use server'
   if (access_token) {
-    //check if notion is connected
+    console.log('🔥 Notion Connect started', { access_token, id })
+    await ensureUserExists()
+
+    // Check if notion is connected for THIS user
     const notion_connected = await db.notion.findFirst({
       where: {
         accessToken: access_token,
+        userId: id, // Scoped to current user
       },
       include: {
         connections: {
@@ -27,6 +32,8 @@ export const onNotionConnect = async (
         },
       },
     })
+
+    console.log('🔥 Notion connected check:', notion_connected)
 
     if (!notion_connected) {
       //create connection
@@ -46,6 +53,7 @@ export const onNotionConnect = async (
           },
         },
       })
+      console.log('✅ Notion connection created successfully')
     }
   }
 }

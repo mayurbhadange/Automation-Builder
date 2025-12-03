@@ -570,14 +570,14 @@ export async function POST(req: NextRequest) {
 
                 // Now that the loop is complete, we can update the user's credits
                 try {
-                await db.user.update({
-                    where: {
-                        clerkId: user.clerkId,
-                    },
-                    data: {
-                        credits: `${parseInt(user.credits!) - 1}`,
-                    },
-                })
+                    await db.user.update({
+                        where: {
+                            clerkId: user.clerkId,
+                        },
+                        data: {
+                            credits: `${parseInt(user.credits!) - 1}`,
+                        },
+                    })
                 } catch (error) {
                     console.error("Error updating credits:", error);
                 }

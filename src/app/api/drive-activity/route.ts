@@ -31,6 +31,9 @@ export async function GET() {
     access_token: accessToken,
   })
 
+  console.log('🔥 Webhook URL:', `${process.env.NEXT_PUBLIC_URL}/api/drive-activity/notification`)
+  console.log('🔥 Access Token found:', !!accessToken)
+
   const drive = google.drive({
     version: 'v3',
     auth: oauth2Client,
@@ -38,39 +41,44 @@ export async function GET() {
 
   const channelId = uuidv4()
 
-  const startPageTokenRes = await drive.changes.getStartPageToken({})
-  const startPageToken = startPageTokenRes.data.startPageToken
-  if (startPageToken == null) {
-    throw new Error('startPageToken is unexpectedly null')
-  }
+  try {
+    const startPageTokenRes = await drive.changes.getStartPageToken({})
+    const startPageToken = startPageTokenRes.data.startPageToken
+    if (startPageToken == null) {
+      throw new Error('startPageToken is unexpectedly null')
+    }
 
-  const listener = await drive.changes.watch({
-    pageToken: startPageToken,
-    supportsAllDrives: true,
-    supportsTeamDrives: true,
-    requestBody: {
-      id: channelId,
-      type: 'web_hook',
-      address:
-        `${process.env.NEXT_PUBLIC_URL}/api/drive-activity/notification`,
-      kind: 'api#channel',
-    },
-  })
-
-  if (listener.status == 200) {
-    //if listener created store its channel id in db
-    const channelStored = await db.user.updateMany({
-      where: {
-        clerkId: userId,
-      },
-      data: {
-        googleResourceId: listener.data.resourceId,
+    const listener = await drive.changes.watch({
+      pageToken: startPageToken,
+      supportsAllDrives: true,
+      supportsTeamDrives: true,
+      requestBody: {
+        id: channelId,
+        type: 'web_hook',
+        address:
+          `${process.env.NEXT_PUBLIC_URL}/api/drive-activity/notification`,
+        kind: 'api#channel',
       },
     })
 
-    if (channelStored) {
-      return new NextResponse('Listening to changes...')
+    if (listener.status == 200) {
+      //if listener created store its channel id in db
+      const channelStored = await db.user.updateMany({
+        where: {
+          clerkId: userId,
+        },
+        data: {
+          googleResourceId: listener.data.resourceId,
+        },
+      })
+
+      if (channelStored) {
+        return new NextResponse('Listening to changes...')
+      }
     }
+  } catch (error) {
+    console.error('🔴 Error creating Google Drive listener:', error)
+    return new NextResponse('Failed to create listener', { status: 500 })
   }
 
   return new NextResponse('Oops! something went wrong, try again')
