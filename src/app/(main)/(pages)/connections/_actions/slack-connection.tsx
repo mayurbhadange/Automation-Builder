@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { currentUser } from '@clerk/nextjs'
 import axios from 'axios'
 import { ensureUserExists } from '@/lib/sync-user'
+import { encrypt, decrypt } from '@/lib/encryption'
 
 export const onSlackConnect = async (
   app_id: string,
@@ -22,20 +23,34 @@ export const onSlackConnect = async (
 
   const slackConnection = await db.slack.findFirst({
     where: {
-      slackAccessToken: slack_access_token,
-      userId: user_id, // Scoped to current user
+      userId: user_id,
+      teamId: team_id,
+      botUserId: bot_user_id,
     },
     include: { connections: true },
   })
 
-  if (!slackConnection) {
+  if (slackConnection) {
+    await db.slack.update({
+      where: {
+        id: slackConnection.id,
+      },
+      data: {
+        authedUserToken: encrypt(authed_user_token),
+        slackAccessToken: encrypt(slack_access_token),
+        appId: app_id,
+        authedUserId: authed_user_id,
+        teamName: team_name,
+      },
+    })
+  } else {
     await db.slack.create({
       data: {
         userId: user_id,
         appId: app_id,
         authedUserId: authed_user_id,
-        authedUserToken: authed_user_token,
-        slackAccessToken: slack_access_token,
+        authedUserToken: encrypt(authed_user_token),
+        slackAccessToken: encrypt(slack_access_token),
         botUserId: bot_user_id,
         teamId: team_id,
         teamName: team_name,
@@ -67,7 +82,7 @@ export async function listBotChannels(
 
   try {
     const { data } = await axios.get(url, {
-      headers: { Authorization: `Bearer ${slackAccessToken}` },
+      headers: { Authorization: `Bearer ${decrypt(slackAccessToken)}` },
     })
 
     if (!data.ok) throw new Error(data.error)
@@ -96,7 +111,7 @@ const postMessageInSlackChannel = async (
       { channel: slackChannel, text: content },
       {
         headers: {
-          Authorization: `Bearer ${slackAccessToken}`,
+          Authorization: `Bearer ${decrypt(slackAccessToken)}`,
           'Content-Type': 'application/json;charset=utf-8',
         },
       }

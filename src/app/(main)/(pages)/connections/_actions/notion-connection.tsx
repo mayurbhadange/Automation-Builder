@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { currentUser } from '@clerk/nextjs'
 import { Client } from '@notionhq/client'
 import { ensureUserExists } from '@/lib/sync-user'
+import { encrypt, decrypt } from '@/lib/encryption'
 
 export const onNotionConnect = async (
   access_token: string,
@@ -21,8 +22,8 @@ export const onNotionConnect = async (
     // Check if notion is connected for THIS user
     const notion_connected = await db.notion.findFirst({
       where: {
-        accessToken: access_token,
-        userId: id, // Scoped to current user
+        userId: id,
+        workspaceId: workspace_id,
       },
       include: {
         connections: {
@@ -35,13 +36,27 @@ export const onNotionConnect = async (
 
     console.log('🔥 Notion connected check:', notion_connected)
 
-    if (!notion_connected) {
-      //create connection
+    if (notion_connected) {
+      // Update existing connection
+      await db.notion.update({
+        where: {
+          id: notion_connected.id,
+        },
+        data: {
+          accessToken: encrypt(access_token),
+          workspaceIcon: workspace_icon!,
+          workspaceName: workspace_name!,
+          databaseId: database_id,
+        },
+      })
+      console.log('✅ Notion connection updated successfully')
+    } else {
+      // Create new connection
       await db.notion.create({
         data: {
           userId: id,
           workspaceIcon: workspace_icon!,
-          accessToken: access_token,
+          accessToken: encrypt(access_token),
           workspaceId: workspace_id!,
           workspaceName: workspace_name!,
           databaseId: database_id,
@@ -77,7 +92,7 @@ export const getNotionDatabase = async (
   accessToken: string
 ) => {
   const notion = new Client({
-    auth: accessToken,
+    auth: decrypt(accessToken),
   })
   const response = await notion.databases.retrieve({ database_id: databaseId })
   return response
@@ -89,7 +104,7 @@ export const onCreateNewPageInDatabase = async (
   content: string
 ) => {
   const notion = new Client({
-    auth: accessToken,
+    auth: decrypt(accessToken),
   })
 
   console.log(databaseId)

@@ -15,33 +15,50 @@ export async function GET(req: NextRequest) {
     )
     data.append('code', code.toString())
 
-    const output = await axios.post(
-      'https://discord.com/api/oauth2/token',
-      data,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    )
-
-    if (output.data) {
-      const access = output.data.access_token
-      const UserGuilds: any = await axios.get(
-        `https://discord.com/api/users/@me/guilds`,
+    try {
+      const output = await axios.post(
+        'https://discord.com/api/oauth2/token',
+        data,
         {
           headers: {
-            Authorization: `Bearer ${access}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
         }
       )
 
-      const UserGuild = UserGuilds.data.filter(
-        (guild: any) => guild.id == output.data.webhook.guild_id
-      )
+      if (output.data) {
+        const access = output.data.access_token
+        const UserGuilds: any = await axios.get(
+          `https://discord.com/api/users/@me/guilds`,
+          {
+            headers: {
+              Authorization: `Bearer ${access}`,
+            },
+          }
+        )
 
+        const UserGuild = UserGuilds.data.filter(
+          (guild: any) => guild.id == output.data.webhook?.guild_id
+        )
+
+        if (!output.data.webhook) {
+          console.log('❌ Discord Webhook data missing')
+          return NextResponse.redirect(
+            `${process.env.NEXT_PUBLIC_URL}/connections?error=missing_webhook`
+          )
+        }
+
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_URL}/connections?webhook_id=${output.data.webhook.id
+          }&webhook_url=${output.data.webhook.url}&webhook_name=${output.data.webhook.name
+          }&guild_id=${output.data.webhook.guild_id}&guild_name=${UserGuild[0]?.name ?? 'Unknown'
+          }&channel_id=${output.data.webhook.channel_id}`
+        )
+      }
+    } catch (error) {
+      console.error('❌ Discord Callback Error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_URL}/connections?webhook_id=${output.data.webhook.id}&webhook_url=${output.data.webhook.url}&webhook_name=${output.data.webhook.name}&guild_id=${output.data.webhook.guild_id}&guild_name=${UserGuild[0].name}&channel_id=${output.data.webhook.channel_id}`
+        `${process.env.NEXT_PUBLIC_URL}/connections?error=discord_callback_failed`
       )
     }
 

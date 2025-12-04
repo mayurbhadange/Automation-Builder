@@ -15,7 +15,7 @@ model User {
   profileImage          String?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
-  credits               String?                @default("10")
+  credits               String?                @default("100")
   googleResourceId      String?                @unique
   localGoogleId         String?                @unique
   tier                  String?                @default("Free")
