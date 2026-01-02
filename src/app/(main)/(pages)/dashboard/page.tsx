@@ -3,6 +3,7 @@ import { getDashboardStats } from './_actions/dashboard-connections'
 import CreditTracker from '../billing/_components/credits-tracker'
 import { CONNECTIONS } from '@/lib/constants'
 import Image from 'next/image'
+import Link from 'next/link'
 
 const DashboardPage = async () => {
   const { totalWorkflows, activeWorkflows, credits, tier, connections } = await getDashboardStats()
@@ -27,7 +28,12 @@ const DashboardPage = async () => {
           <CreditTracker credits={parseInt(credits)} tier={tier} />
         </div>
         <div className="flex flex-col gap-4 mt-6">
-          <h2 className="text-2xl font-bold text-neutral-200">Connected Apps</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold text-neutral-200">Connected Apps</h2>
+            <Link href="/connections" className="text-sm text-neutral-400 hover:text-neutral-200 hover:underline">
+              (connect more apps)
+            </Link>
+          </div>
           <div className="flex gap-4 flex-wrap">
             {CONNECTIONS.map((conn) => {
               const isConnected = connections.find((c) => c.type === conn.title)
