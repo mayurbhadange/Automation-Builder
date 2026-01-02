@@ -41,7 +41,7 @@ export const SubscriptionCard = ({ onPayment, products, tier }: Props) => {
               <div className="flex justify-between">
                 <p>
                   {product.nickname == 'Free'
-                    ? '10'
+                    ? '100'
                     : product.nickname == 'Pro'
                     ? '100'
                     : product.nickname == 'Unlimited' && 'unlimited'}{' '}

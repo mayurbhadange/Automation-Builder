@@ -74,7 +74,7 @@ export default function Home() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />
-                    10 credits per month
+                    100 credits 
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon />

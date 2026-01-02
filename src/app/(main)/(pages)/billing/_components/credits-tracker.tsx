@@ -26,7 +26,7 @@ const CreditTracker = ({ credits, tier }: Props) => {
           <div className="flex justify-end">
             <p>
               {credits}/
-              {tier == 'Free' ? 10 : tier == 'Pro' ? 100 : 'Unlimited'}
+              {tier == 'Free' ? 100 : tier == 'Pro' ? 100 : 'Unlimited'}
             </p>
           </div>
         </CardContent>

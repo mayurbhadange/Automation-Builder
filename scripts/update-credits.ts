@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client'
 const db = new PrismaClient()
 
 async function main() {
-    const userId = 'user_36HFNN6MYhYXvWUwUktO5ugF5eq' // Found in logs
+    const userId = 'user_2yB5oJhNIQvPz9Yw2aIgylFB4E9'
     console.log(`Updating credits for user: ${userId}`)
 
     const user = await db.user.update({
@@ -12,7 +12,7 @@ async function main() {
             clerkId: userId,
         },
         data: {
-            credits: 'Unlimited',
+            credits: '100',
         },
     })
 
