@@ -391,6 +391,9 @@ import { db } from "@/lib/db";
 import axios from "axios";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
+import { clerkClient } from "@clerk/nextjs";
+import { google } from "googleapis";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req: NextRequest) {
     console.log('🔵 Webhook received: Google Drive Activity Notification');
@@ -449,6 +452,54 @@ export async function POST(req: NextRequest) {
                         continue
                     }
 
+                    // STEP 4: Fetch latest Google Drive file and initialize Memory Context
+                    let fileContent = ""
+                    const hasAiNode = flowPath.includes('AI')
+                    if (hasAiNode) {
+                        try {
+                            const clerkResponse = await clerkClient.users.getUserOauthAccessToken(
+                                user.clerkId,
+                                'oauth_google'
+                            )
+                            const accessToken = clerkResponse[0].token
+                            const oauth2Client = new google.auth.OAuth2()
+                            oauth2Client.setCredentials({ access_token: accessToken })
+                            const drive = google.drive({ version: 'v3', auth: oauth2Client })
+                            
+                            const driveResponse = await drive.files.list({
+                                pageSize: 1,
+                                orderBy: 'modifiedTime desc',
+                            })
+                            const latestFile = driveResponse.data.files?.[0]
+                            
+                            if (latestFile) {
+                                if (latestFile.mimeType?.startsWith('image/')) {
+                                    const fileContentRes = await drive.files.get({
+                                        fileId: latestFile.id!,
+                                        alt: 'media',
+                                    }, { responseType: 'arraybuffer' })
+                                    fileContent = Buffer.from(fileContentRes.data as any).toString('base64')
+                                } else {
+                                    const fileContentRes = await drive.files.get({
+                                        fileId: latestFile.id!,
+                                        alt: 'media',
+                                    }, { responseType: 'text' })
+                                    fileContent = typeof fileContentRes.data === 'string' 
+                                        ? fileContentRes.data 
+                                        : JSON.stringify(fileContentRes.data)
+                                }
+                            }
+                        } catch (err) {
+                            console.log("Error fetching file content", err)
+                            fileContent = "[System Note: The uploaded file is an unsupported format and its contents cannot be read.]"
+                        }
+                    }
+
+                    let workflowMemory = {
+                        googleDrive: { fileContent },
+                        aiResponse: ""
+                    }
+
                     let current = 0
                     while (current < flowPath.length) {
                         if (flowPath[current] == 'Discord') {
@@ -461,11 +512,13 @@ export async function POST(req: NextRequest) {
                                 },
                             })
                             if (discordMessage) {
+                                const finalMessage = flow.discordTemplate!.replace('{{AI.response}}', workflowMemory.aiResponse)
                                 await postContentToWebHook(
-                                    flow.discordTemplate!,
+                                    finalMessage,
                                     discordMessage.url
                                 )
                                 flowPath.splice(current, 1)
+                                continue
                             }
                         }
 
@@ -498,13 +551,15 @@ export async function POST(req: NextRequest) {
                             })
 
                             console.log(`🔄 Sending to Slack channels: ${JSON.stringify(channels)}`)
-                            console.log(`🔄 Message template: ${flow.slackTemplate}`)
+                            
+                            const finalSlackMessage = flow.slackTemplate!.replace('{{AI.response}}', workflowMemory.aiResponse)
+                            console.log(`🔄 Message template: ${finalSlackMessage}`)
 
                             try {
                                 await postMessageToSlack(
                                     flow.slackAccessToken!,
                                     channels,
-                                    flow.slackTemplate!
+                                    finalSlackMessage
                                 )
                                 console.log(`✅ Slack message sent successfully`)
                             } catch (error) {
@@ -513,16 +568,19 @@ export async function POST(req: NextRequest) {
 
                             // Fixed: The splice operation was incorrect, using current index is needed
                             flowPath.splice(current, 1)
+                            continue
                         }
 
                         if (flowPath[current] == 'Notion') {
+                            const finalNotionTemplate = flow.notionTemplate!.replace('{{AI.response}}', workflowMemory.aiResponse)
                             await onCreateNewPageInDatabase(
                                 flow.notionDbId!,
                                 flow.notionAccessToken!,
-                                JSON.parse(flow.notionTemplate!)
+                                JSON.parse(finalNotionTemplate)
                             )
                             // Fixed: The splice operation was incorrect, using current index is needed
                             flowPath.splice(current, 1)
+                            continue
                         }
 
                         if (flowPath[current] == 'Wait') {
@@ -564,6 +622,57 @@ export async function POST(req: NextRequest) {
                             }
                             break
                         }
+
+                        if (flowPath[current] == 'AI') {
+                            console.log(`🔄 Executing AI action for workflow: ${flow.name}`)
+                            try {
+                                if (!flow.aiTemplate) {
+                                    console.log(`❌ No AI template for workflow: ${flow.name}`)
+                                    current++
+                                    continue
+                                }
+                                
+                                const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+                                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+
+                                try {
+                                    // Check if the memory has base64 image data (starts with /9j/ for JPEG, iVBORw0KGgo for PNG, etc)
+                                    // A simple heuristic: if it doesn't have spaces and is long, it might be base64. 
+                                    const isBase64 = /^[a-zA-Z0-9+/]+={0,2}$/.test(workflowMemory.googleDrive.fileContent.substring(0, 50)) 
+                                                    && workflowMemory.googleDrive.fileContent.length > 100;
+
+                                    if (isBase64) {
+                                        const finalPrompt = flow.aiTemplate.replace('{{Drive.fileContent}}', '[Attached Image]')
+                                        const result = await model.generateContent({
+                                            contents: [
+                                                {
+                                                    role: 'user',
+                                                    parts: [
+                                                        { text: finalPrompt },
+                                                        { inlineData: { data: workflowMemory.googleDrive.fileContent, mimeType: "image/jpeg" } }
+                                                    ]
+                                                }
+                                            ]
+                                        })
+                                        workflowMemory.aiResponse = result.response.text()
+                                    } else {
+                                        const finalPrompt = flow.aiTemplate.replace('{{Drive.fileContent}}', workflowMemory.googleDrive.fileContent)
+                                        const result = await model.generateContent(finalPrompt)
+                                        workflowMemory.aiResponse = result.response.text()
+                                    }
+                                    console.log(`✅ AI successfully generated response`)
+                                } catch (err: any) {
+                                    console.log(`❌ AI Generation Error:`, err)
+                                    workflowMemory.aiResponse = "[AI Error: Failed to generate response]"
+                                }
+                            } catch (error) {
+                                console.log(`❌ General AI Error:`, error)
+                                workflowMemory.aiResponse = "[AI Error: Unexpected failure]"
+                            }
+                            flowPath.splice(current, 1)
+                            continue
+                        }
+
                         current++
                     }
                 }

@@ -1,33 +1,37 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-# 🚀 Fuzzie — Workflow Automation Builder  
+# 🚀 Fuzzie — Workflow Automation Builder
 
-Fuzzie is a flexible, modern **Workflow Automation Builder** that helps you connect apps, automate repetitive tasks, and streamline your processes — without writing code.  
+Fuzzie is a flexible, modern **Workflow Automation Builder** that helps you connect apps, automate repetitive tasks, and streamline your processes — without writing code.
 
-## ✨ Features  
-- Visual workflow builder  
-- Multi-app triggers and actions  
-- Clean, user-friendly interface  
-- Real-time execution with error handling  
-- Integrations with:  
-  - Google Drive  
-  - Slack  
-  - Discord  
-  - Notion  
+## ✨ Features
 
-## 🔧 Tech Stack  
-- **Frontend:** Next.js 14, Tailwind CSS v4  
-- **Authentication:** Clerk  
-- **Database:** Neon Tech  
-- **File Storage:** Uploadcare  
-- **Tunnel:** Ngrok  
-- **Payments:** Stripe  
+- **Visual Workflow Builder:** Drag-and-drop interface powered by React Flow.
+- **Automated Triggers & Actions:** Connect multiple apps seamlessly.
+- **Real-time Execution:** Visualize workflow progress and handle errors gracefully.
+- **Dashboard:** Overview of credits, workflows, and connected apps.
+- **Integrations:**
+  - Google Drive (Triggers on file changes)
+  - Slack (Send messages)
+  - Discord (Post to webhooks)
+  - Notion (Create/Update database items)
+- **Authentication:** Secure user management with Clerk.
+- **Payments:** Subscription and credit system via Stripe.
 
-## 📸 UI Preview  
+## 🔧 Tech Stack
+
+- **Frontend:** Next.js 14, Tailwind CSS v3, Framer Motion, Radix UI
+- **Workflow Engine:** React Flow
+- **State Management:** Zustand
+- **Authentication:** Clerk
+- **Database:** PostgreSQL (Neon Tech), Prisma ORM
+- **File Storage:** Uploadcare
+- **Payments:** Stripe
+- **Tunnelling:** Ngrok (for local webhook testing)
 
 ## 📸 Screenshots
 
-### 🏠 Homepage 
+### 🏠 Homepage
 ![Fuzzie Homepage](./public/fuzz1.png)
 
 ### 🧠 Workflow Builder – Drag & Drop Interface
@@ -45,95 +49,113 @@ Fuzzie is a flexible, modern **Workflow Automation Builder** that helps you conn
 ### 📈 Workflows – Landing Section
 ![Developer Studio](./public/fuzz6.png)
 
-### 🎥 Watch the Demo  
-[Click here to watch UI](https://drive.google.com/file/d/1HfgfJzZKlIJ19wZtNfFwclISDa6s_YWv/view?usp=sharing)
-[Click here to watch Working](https://drive.google.com/file/d/1YxFvT48Vktcf85gDSrN6H68CNMl2DEbf/view?usp=sharing)
+## 🚀 Getting Started
 
+### 1️⃣ Clone the Repository
 
-### 1️⃣ Clone the Repository  
 ```bash
-git clone https://github.com/mayurbhadange/Automation-Builder.git  
+git clone https://github.com/mayurbhadange/Automation-Builder.git
 cd Automation-Builder
+```
 
-Here’s an example of how your .env.local file might look for Fuzzie:
+### 2️⃣ Install Dependencies
 
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### 3️⃣ Configure Environment Variables
+
+Create a `.env` file in the root directory. You can use the example below:
+
+```env
 # Clerk Authentication
-CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
-CLERK_SECRET_KEY=your-clerk-secret-key
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
 
 # Neon Tech (PostgreSQL DB)
-DATABASE_URL=your-neon-tech-postgres-url
+DATABASE_URL="postgresql://user:password@host:port/dbname?sslmode=require"
 
 # Uploadcare
-UPLOADCARE_PUBLIC_KEY=your-uploadcare-public-key
+NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY=your-uploadcare-public-key
 UPLOADCARE_SECRET_KEY=your-uploadcare-secret-key
 
-# Ngrok
-NGROK_AUTH_TOKEN=your-ngrok-auth-token
-NGROK_PUBLIC_URL=your-ngrok-url # Example: https://xyz123.ngrok.io
-
 # Stripe
-STRIPE_PUBLIC_KEY=your-stripe-public-key
-STRIPE_SECRET_KEY=your-stripe-secret-key
-STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 
 # Google API (Drive)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_REDIRECT_URI=https://fuzzie-kohl.vercel/api/auth/callback/google
 GOOGLE_API_KEY=your-google-api-key
+# Dev: http://localhost:3000/api/auth/callback/google
+# Prod: https://your-domain.vercel.app/api/auth/callback/google
+OAUTH2_REDIRECT_URI=http://localhost:3000/api/auth/callback/google
 
 # Slack API
 SLACK_CLIENT_ID=your-slack-client-id
 SLACK_CLIENT_SECRET=your-slack-client-secret
 SLACK_SIGNING_SECRET=your-slack-signing-secret
-SLACK_BOT_TOKEN=your-slack-bot-token
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_REDIRECT_URI=http://localhost:3000/api/auth/callback/slack
 
 # Discord API
 DISCORD_CLIENT_ID=your-discord-client-id
 DISCORD_CLIENT_SECRET=your-discord-client-secret
 DISCORD_BOT_TOKEN=your-discord-bot-token
-DISCORD_PUBLIC_KEY=your-discord-public-key
+DISCORD_REDIRECT_URI=http://localhost:3000/api/auth/callback/discord
 
 # Notion API
 NOTION_API_KEY=your-notion-api-key
 NOTION_CLIENT_ID=your-notion-client-id
 NOTION_CLIENT_SECRET=your-notion-client-secret
-NOTION_REDIRECT_URI=https://fuzzie-kohl.vercel/api/auth/callback/notion
+NOTION_REDIRECT_URI=http://localhost:3000/api/auth/callback/notion
 
+# General
+NEXT_PUBLIC_URL=http://localhost:3000
+NEXT_PUBLIC_DOMAIN=localhost:3000
+NEXT_PUBLIC_SCHEME=http://
+```
 
-First, run the development server:
+### 4️⃣ Setup Database
+
+Generate the Prisma client and push the schema to your database:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 5️⃣ Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result (for local development).
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📦 Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+For detailed production deployment instructions, please refer to [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-## Learn More
+## 📚 Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about Next.js and the technologies used:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [React Flow Documentation](https://reactflow.dev/)
+- [Clerk Documentation](https://clerk.com/docs)
+- [Prisma Documentation](https://www.prisma.io/docs)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## 🤝 Contributing
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-
-
+Contributions are welcome! Please run `npm run lint` before submitting a pull request.

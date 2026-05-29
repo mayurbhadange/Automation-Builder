@@ -43,9 +43,10 @@ export const onContentChange = (
     onSlackContent(nodeConnection, event)
   } else if (nodeType === 'Discord') {
     onDiscordContent(nodeConnection, event)
-  } 
-  else if (nodeType === 'Notion') {
+  } else if (nodeType === 'Notion') {
     onNotionContent(nodeConnection, event)
+  } else if (nodeType === 'AI') {
+    onAiContent(nodeConnection, event)
   }
 }
 
@@ -58,6 +59,8 @@ export const onAddTemplate = (
     onAddTemplateSlack(nodeConnection, template)
   } else if (title === 'Discord') {
     onAddTemplateDiscord(nodeConnection, template)
+  } else if (title === 'AI') {
+    onAddTemplateAi(nodeConnection, template)
   }
 }
 
@@ -76,6 +79,16 @@ export const onAddTemplateDiscord = (
   template: string
 ) => {
   nodeConnection.setDiscordNode((prev: any) => ({
+    ...prev,
+    content: `${prev.content} ${template}`,
+  }))
+}
+
+export const onAddTemplateAi = (
+  nodeConnection: ConnectionProviderProps,
+  template: string
+) => {
+  nodeConnection.setAiNode((prev: any) => ({
     ...prev,
     content: `${prev.content} ${template}`,
   }))
@@ -149,6 +162,16 @@ export const onNotionContent = (
   event: React.ChangeEvent<HTMLInputElement>
 ) => {
   nodeConnection.setNotionNode((prev: any) => ({
+    ...prev,
+    content: event.target.value,
+  }))
+}
+
+export const onAiContent = (
+  nodeConnection: ConnectionProviderProps,
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  nodeConnection.setAiNode((prev: any) => ({
     ...prev,
     content: event.target.value,
   }))

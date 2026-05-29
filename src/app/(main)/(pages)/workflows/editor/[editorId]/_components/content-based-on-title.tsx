@@ -68,6 +68,8 @@ const ContentBasedOnTitle = ({
   const isConnected =
     title === 'Google Drive'
       ? !nodeConnection.isLoading
+      : title === 'AI'
+      ? true
       : !!nodeConnectionType[
       `${title === 'Slack'
         ? 'slackAccessToken'
@@ -81,6 +83,22 @@ const ContentBasedOnTitle = ({
 
   if (!isConnected) return <p>Not connected</p>
 
+  const contentValue = nodeConnectionType.content || ''
+  const isTypingVariable = contentValue.endsWith('{{')
+  
+  const getSuggestions = () => {
+    if (title === 'AI') return ['Drive.fileContent', 'Drive.fileName', 'Drive.mimeType']
+    if (title === 'Slack' || title === 'Discord' || title === 'Notion') return ['AI.response', 'Drive.fileContent']
+    return []
+  }
+
+  const onSuggestionClick = (suggestion: string) => {
+    const syntheticEvent = {
+      target: { value: contentValue + suggestion + '}} ' }
+    } as React.ChangeEvent<HTMLInputElement>
+    onContentChange(nodeConnection, title, syntheticEvent)
+  }
+
   return (
     <AccordionContent>
       <Card>
@@ -91,13 +109,31 @@ const ContentBasedOnTitle = ({
           </CardHeader>
         )}
         <div className="flex flex-col gap-3 px-6 py-3 pb-20">
-          <p>{title === 'Notion' ? 'Values to be stored' : 'Message'}</p>
+          <p>{title === 'Notion' ? 'Values to be stored' : title === 'AI' ? 'Prompt' : 'Message'}</p>
 
-          <Input
-            type="text"
-            value={nodeConnectionType.content}
-            onChange={(event) => onContentChange(nodeConnection, title, event)}
-          />
+          <div className="relative">
+            <Input
+              type="text"
+              value={nodeConnectionType.content}
+              onChange={(event) => onContentChange(nodeConnection, title, event)}
+            />
+            {isTypingVariable && getSuggestions().length > 0 && (
+              <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-[#1C1C1E] border dark:border-neutral-800 rounded-md shadow-lg z-50 flex flex-col overflow-hidden">
+                <div className="px-3 py-2 text-xs text-neutral-500 font-semibold bg-gray-50 dark:bg-neutral-900 border-b dark:border-neutral-800">
+                  Select a variable
+                </div>
+                {getSuggestions().map((suggestion) => (
+                  <div
+                    key={suggestion}
+                    className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-800 cursor-pointer text-sm font-mono transition-colors"
+                    onClick={() => onSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {JSON.stringify(file) !== '{}' && title !== 'Google Drive' && (
             <Card className="w-full">

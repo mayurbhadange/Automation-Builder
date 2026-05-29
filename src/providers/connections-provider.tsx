@@ -21,6 +21,7 @@ export type ConnectionProviderProps = {
     discord?: string
     notion?: string
     slack?: string
+    ai?: string
   }
   setNotionNode: React.Dispatch<React.SetStateAction<any>>
   slackNode: {
@@ -39,8 +40,11 @@ export type ConnectionProviderProps = {
       discord?: string
       notion?: string
       slack?: string
+      ai?: string
     }>
   >
+  aiNode: { content: string }
+  setAiNode: React.Dispatch<React.SetStateAction<any>>
   isLoading: boolean
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
@@ -67,6 +71,7 @@ const InitialValues: ConnectionProviderProps = {
     discord: '',
     notion: '',
     slack: '',
+    ai: '',
   },
   slackNode: {
     appId: '',
@@ -85,6 +90,8 @@ const InitialValues: ConnectionProviderProps = {
   setSlackNode: () => undefined,
   setIsLoading: () => undefined,
   setWorkFlowTemplate: () => undefined,
+  aiNode: { content: '' },
+  setAiNode: () => undefined,
 }
 
 const ConnectionsContext = createContext(InitialValues)
@@ -95,6 +102,7 @@ export const ConnectionsProvider = ({ children }: ConnectionWithChildProps) => {
   const [googleNode, setGoogleNode] = useState(InitialValues.googleNode)
   const [notionNode, setNotionNode] = useState(InitialValues.notionNode)
   const [slackNode, setSlackNode] = useState(InitialValues.slackNode)
+  const [aiNode, setAiNode] = useState(InitialValues.aiNode)
   const [isLoading, setIsLoading] = useState(InitialValues.isLoading)
   const [workflowTemplate, setWorkFlowTemplate] = useState(
     InitialValues.workflowTemplate
@@ -109,6 +117,8 @@ export const ConnectionsProvider = ({ children }: ConnectionWithChildProps) => {
     setNotionNode,
     slackNode,
     setSlackNode,
+    aiNode,
+    setAiNode,
     isLoading,
     setIsLoading,
     workflowTemplate,

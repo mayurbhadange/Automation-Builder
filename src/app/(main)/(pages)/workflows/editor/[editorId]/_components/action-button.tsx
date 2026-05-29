@@ -115,6 +115,18 @@ const ActionButton = ({
         toast.message(response)
       }
     }
+
+    if (currentService === 'AI') {
+      const response = await onCreateNodeTemplate(
+        nodeConnection.aiNode.content,
+        currentService,
+        pathname.split('/').pop()!
+      )
+
+      if (response) {
+        toast.message(response)
+      }
+    }
   }, [nodeConnection, channels])
 
   const renderActionButton = () => {
@@ -164,6 +176,18 @@ const ActionButton = ({
             >
               Send Message
             </Button>
+            <Button
+              onClick={onCreateLocalNodeTempate}
+              variant="outline"
+            >
+              Save Template
+            </Button>
+          </>
+        )
+        
+      case 'AI':
+        return (
+          <>
             <Button
               onClick={onCreateLocalNodeTempate}
               variant="outline"
