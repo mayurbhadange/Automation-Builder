@@ -1,7 +1,7 @@
 import { authMiddleware } from '@clerk/nextjs'  
 
 export default authMiddleware({
-    publicRoutes: ['/', '/api/clerk-webhook', '/api/drive-activity/notification', '/api/payment/success'],
+    publicRoutes: ['/', '/api/clerk-webhook', '/api/drive-activity/notification', '/api/payment/success', '/api/inngest'],
     ignoredRoutes: [
         '/api/auth/callback/discord',
         '/api/auth/callback/notion',

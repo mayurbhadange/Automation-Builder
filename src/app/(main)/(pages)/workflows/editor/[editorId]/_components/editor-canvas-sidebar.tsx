@@ -37,7 +37,7 @@ const EditorCanvasSidebar = ({nodes}: Props) => {
           setSlackChannels
         )
       }
-    }, [nodeConnection])
+    }, [nodeConnection.slackNode.slackAccessToken])
 
   return (
     <aside>
